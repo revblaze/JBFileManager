@@ -2,17 +2,37 @@
 //  AppDelegate.swift
 //  JBFileManager
 //
-//  Created by Justin Bush on 2017-01-31.
+//  Created by Justin Bush on 27/01/2017.
 //  Copyright © 2017 Justin Bush. All rights reserved.
 //
 
 import UIKit
 
+extension UIImage {
+    
+    static func imageWithColor(with color: UIColor) -> UIImage {
+        let pixelScale = UIScreen.main.scale
+        let pixelSize = 1 / pixelScale
+        let fillSize = CGSize(width: pixelSize, height: pixelSize)
+        let fillRect = CGRect(origin: CGPoint.zero, size: fillSize)
+        UIGraphicsBeginImageContextWithOptions(fillRect.size, false, pixelScale)
+        let graphicsContext = UIGraphicsGetCurrentContext()
+        graphicsContext!.setFillColor(color.cgColor)
+        graphicsContext!.fill(fillRect)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image!
+    }
+}
+
 @UIApplicationMain
+
 class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDelegate {
 
     var window: UIWindow?
-
+    var rootPath: String = ""
+    
+    static let sharedInstance = AppDelegate()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -20,6 +40,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         let navigationController = splitViewController.viewControllers[splitViewController.viewControllers.count-1] as! UINavigationController
         navigationController.topViewController!.navigationItem.leftBarButtonItem = splitViewController.displayModeButtonItem
         splitViewController.delegate = self
+        
+        rootPath = (FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path)!
+        
         return true
     }
 
@@ -50,7 +73,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
     func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController:UIViewController, onto primaryViewController:UIViewController) -> Bool {
         guard let secondaryAsNavController = secondaryViewController as? UINavigationController else { return false }
         guard let topAsDetailController = secondaryAsNavController.topViewController as? DetailViewController else { return false }
-        if topAsDetailController.detailItem == nil {
+        if topAsDetailController.filePath == nil {
             // Return true to indicate that we have handled the collapse by doing nothing; the secondary controller will be discarded.
             return true
         }
