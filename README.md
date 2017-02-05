@@ -18,6 +18,7 @@ JBFileManager was built from the ground up for durability, reliability, and abov
     - [ ] Delete File / Directory
     - [ ] Move File / Directory
 - [ ] Additional Examples
+    - [ ] Syntax Highlighting
     - [ ] Export Files / Directories
     - [ ] Dropbox Integration
 
