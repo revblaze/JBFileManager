@@ -2,8 +2,8 @@
 //  AppDelegate.swift
 //  JBFileManager
 //
-//  Created by Justin Bush on 27/01/2017.
-//  Copyright © 2017 Justin Bush. All rights reserved.
+//  Created by Justin Mathilde on 27/01/2017.
+//  Copyright © 2017 JB. All rights reserved.
 //
 
 import UIKit
@@ -30,9 +30,6 @@ extension UIImage {
 class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDelegate {
 
     var window: UIWindow?
-    var rootPath: String = ""
-    
-    static let sharedInstance = AppDelegate()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -41,7 +38,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         navigationController.topViewController!.navigationItem.leftBarButtonItem = splitViewController.displayModeButtonItem
         splitViewController.delegate = self
         
-        rootPath = (FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path)!
+        let navApperance = UINavigationBar.appearance()
+        let imgForBackground = UIImage.imageWithColor(with: UIColor.init(red: 249/255.0, green: 56/255.0, blue: 65/255.0, alpha: 1.0))
+        navApperance.setBackgroundImage(imgForBackground, for: UIBarMetrics.default)
+
+        GlobalVariables.sharedManager.rootPath = (FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path)!
         
         return true
     }
@@ -79,6 +80,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         }
         return false
     }
-
+    
+    
 }
 

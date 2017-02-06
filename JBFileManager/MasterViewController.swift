@@ -2,8 +2,8 @@
 //  MasterViewController.swift
 //  JBFileManager
 //
-//  Created by Justin Bush on 27/01/2017.
-//  Copyright © 2017 Justin Bush. All rights reserved.
+//  Created by Justin Mathilde on 27/01/2017.
+//  Copyright © 2017 JB. All rights reserved.
 //
 
 import UIKit
@@ -16,19 +16,14 @@ class MasterViewController: UITableViewController {
     var lstFile:Array<String> = Array()
     var lstFileType:Array<String> = Array()
     
-    var isMove:Bool = false
-    var fromPath:String = ""
-    var moveFileName:String = ""
-    
     //let path = Bundle.main.resourcePath!
     //let path = FileManager.default.currentDirectoryPath
-    
-    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     
     var curPath:String = ""
     var dirName:String = ""
     
-    var pasteButton:UIBarButtonItem? = nil
+    var backButton:UIButton? = nil
+    var vwPaste:UIView? = nil
     
     @IBOutlet var lblDirName:UILabel!
     
@@ -36,34 +31,34 @@ class MasterViewController: UITableViewController {
         
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        //self.navigationItem.leftBarButtonItem = self.editButtonItem
         
-//        pasteButton = UIBarButtonItem(title: "Paste", style: .done, target: self, action: #selector(pasteObject(_:)))
-//        self.navigationItem.leftBarButtonItem = nil
+        vwPaste = UIView.init(frame: CGRect.init(x: 0, y: 0, width: self.view.frame.width, height: 30))
         
-        let backButton = UIButton.init(type: UIButtonType.custom)
-        backButton.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
-        backButton.setImage(UIImage.init(named: "Back"), for: UIControlState.normal)
-        backButton.addTarget(self, action: #selector(btnBackClicked(_:)), for: UIControlEvents.touchUpInside)
+        let cancelButton = UIButton.init(type: UIButtonType.custom)
+        cancelButton.frame = CGRect(x: 0, y: 0, width: self.view.frame.width/2.0, height: 30)
+        cancelButton.setTitle("Cancel", for: UIControlState.normal)
+        cancelButton.addTarget(self, action: #selector(btnCancelClicked(_:)), for: UIControlEvents.touchUpInside)
+        cancelButton.backgroundColor = UIColor.init(red: 249/255.0, green: 56/255.0, blue: 65/255.0, alpha: 1.0)
         
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backButton)
+        let pasteButton = UIButton.init(type: UIButtonType.custom)
+        pasteButton.frame = CGRect(x: self.view.frame.width/2.0, y: 0, width: self.view.frame.width/2.0, height: 30)
+        pasteButton.setTitle("Paste", for: UIControlState.normal)
+        pasteButton.addTarget(self, action: #selector(btnPasteClicked(_:)), for: UIControlEvents.touchUpInside)
+        pasteButton.backgroundColor = UIColor.init(red: 76/255.0, green: 217/255.0, blue: 100/255.0, alpha: 1.0)
         
-        if curPath == "" {
-            
-            curPath = appDelegate.rootPath
-            dirName = "My Documents"
-        }
+        vwPaste?.addSubview(cancelButton)
+        vwPaste?.addSubview(pasteButton)
+
+        backButton = UIButton.init(type: UIButtonType.custom)
+        backButton?.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
+        backButton?.setImage(UIImage.init(named: "back"), for: UIControlState.normal)
+        backButton?.addTarget(self, action: #selector(btnBackClicked(_:)), for: UIControlEvents.touchUpInside)
         
-        if appDelegate.rootPath == curPath {
-            
-            self.navigationItem.leftBarButtonItem = nil
-        }
-        
-        lblDirName.text = dirName
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backButton!)
         
         let addButton = UIButton.init(type: UIButtonType.custom)
         addButton.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
-        addButton.setImage(UIImage.init(named: "Add"), for: UIControlState.normal)
+        addButton.setImage(UIImage.init(named: "add"), for: UIControlState.normal)
         addButton.addTarget(self, action: #selector(btnAddClicked(_:)), for: UIControlEvents.touchUpInside)
         
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
@@ -73,7 +68,57 @@ class MasterViewController: UITableViewController {
             self.detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
         }
         
+        let recognizer:UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(self.swipeRight))
+        recognizer.direction = .right
+        self.view.addGestureRecognizer(recognizer)
+        
+        //loadData()
+    }
+    
+    func swipeRight(recognizer : UISwipeGestureRecognizer) {
+        
+        if self.navigationItem.leftBarButtonItem != nil {
+            
+            let _ = self.navigationController?.popViewController(animated: true)
+        }
+    }
+    
+    func loadData() {
+        
+        if GlobalVariables.sharedManager.moveFileName == "" {
+            
+            self.tableView.tableHeaderView = nil
+            
+        } else {
+            
+            self.tableView.tableHeaderView = vwPaste
+        }
+        
+        if curPath == "" {
+            
+            curPath = GlobalVariables.sharedManager.rootPath
+            dirName = "My Documents"
+        }
+        
+        if GlobalVariables.sharedManager.rootPath == curPath {
+            
+            self.navigationItem.leftBarButtonItem = nil
+            
+        } else {
+            
+            self.navigationItem.leftBarButtonItem = UIBarButtonItem.init(customView: self.backButton!)
+        }
+        
+        
+        lblDirName.text = dirName
+        
         loadFiles()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        //loadData()
     }
     
     func loadFiles() {
@@ -106,6 +151,8 @@ class MasterViewController: UITableViewController {
     override func viewWillAppear(_ animated: Bool) {
         self.clearsSelectionOnViewWillAppear = self.splitViewController!.isCollapsed
         super.viewWillAppear(animated)
+        
+        loadData()
     }
 
     override func didReceiveMemoryWarning() {
@@ -113,23 +160,39 @@ class MasterViewController: UITableViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    func pasteObject(_ sender: Any) {
+    func btnCancelClicked(_ sender: Any) {
+    
+        GlobalVariables.sharedManager.moveFromPath    = ""
+        GlobalVariables.sharedManager.moveFileName    = ""
+        
+        self.tableView.tableHeaderView = nil;
+    }
+    
+    func btnPasteClicked(_ sender: Any) {
         
         do {
             
-            let toPath = curPath + "/" + moveFileName
+            let moveToPath = curPath + "/" + GlobalVariables.sharedManager.moveFileName
             
-            try FileManager.default.moveItem(atPath: fromPath, toPath: toPath)
+            try FileManager.default.moveItem(atPath: GlobalVariables.sharedManager.moveFromPath, toPath: moveToPath)
             
-            fromPath        = ""
-            moveFileName    = ""
-            isMove          = false
-            self.navigationItem.leftBarButtonItem = nil
+            GlobalVariables.sharedManager.moveFromPath    = ""
+            GlobalVariables.sharedManager.moveFileName    = ""
+            
+            self.tableView.tableHeaderView = nil;
             
             loadFiles()
             
         } catch let error as NSError {
-            NSLog("Unable to create directory \(error.debugDescription)")
+            
+            NSLog("Unable to create directory \(error.localizedFailureReason)")
+            
+            GlobalVariables.sharedManager.moveFromPath    = ""
+            GlobalVariables.sharedManager.moveFileName    = ""
+            
+            self.tableView.tableHeaderView = nil;
+            
+            showAlertMessage(strMessage: error.localizedFailureReason!)
         }
     }
     
@@ -144,12 +207,12 @@ class MasterViewController: UITableViewController {
         
         let fileAction = UIAlertAction(title: "New File", style: .default, handler: {
             (alert: UIAlertAction!) -> Void in
-                self.showAlert(isFile: true)
+            self.showAlert(isFile: true)
         })
         
         let dirAction = UIAlertAction(title: "New Directory", style: .default, handler: {
             (alert: UIAlertAction!) -> Void in
-                self.showAlert(isFile: false)
+            self.showAlert(isFile: false)
         })
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: {
@@ -160,69 +223,54 @@ class MasterViewController: UITableViewController {
         alertController.addAction(dirAction)
         alertController.addAction(cancelAction)
         
-        self.present(alertController, animated: true, completion: nil)
+        if UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiom.pad {
+        
+            let popover = alertController.popoverPresentationController
+            popover?.sourceView = view
+            popover?.sourceRect = CGRect(x: 32, y: 32, width: 64, height: 64)
+            
+            present(alertController, animated: true, completion: nil)
+            
+        } else {
+            
+            self.present(alertController, animated: true, completion: nil)
+        }
     }
     
     func showAlert(isFile:Bool){
         
-        let strInput:String
+        let alertController = JLAlertViewController.inputAlertController("Please input file name", placeholder: "Name", cancelButtonText: "Cancel", regularButtonText: "Create")
         
-        if isFile == true {
-            strInput = "Please input file name"
-        }
-        else {
-            strInput = "Please input directory name"
-        }
-        
-        let alertController = UIAlertController(title: nil, message: strInput, preferredStyle: .alert)
-        
-        let okAction = UIAlertAction(title: "Create", style: .default, handler: {
-            alert -> Void in
+        alertController.didDismissBlock = { alertViewController, buttonTapped in
             
-            let textField = alertController.textFields![0] as UITextField!
-            
-            if textField?.text == "" {
+            if buttonTapped.rawValue == 1 {
                 
-                self.showAlertMessage(strMessage: "You must type a name")
-                
-            } else {
-                
-                if(self.checkFileName(isFile: isFile, strName: (textField?.text)!)) {
+                if(self.checkFileName(isFile: isFile, strName: (alertController.getInputText())!)) {
                     
-                    self.addFile(isFile: isFile, strName: (textField?.text)!)
+                    self.addFile(isFile: isFile, strName: (alertController.getInputText())!)
                     
                 } else {
                     
                     self.showAlertMessage(strMessage: "There is already a file with the same name in this location")
                 }
             }
-        })
+        }
         
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: {
-            (alert: UIAlertAction!) -> Void in
-        })
-        
-        alertController.addAction(okAction)
-        alertController.addAction(cancelAction)
-        
-        alertController.addTextField(configurationHandler: { (textField : UITextField!) -> Void in
-            textField.placeholder = "Name"
-        })
-        
-        self.present(alertController, animated: true, completion: nil)
+        alertController.show()
     }
     
     func showAlertMessage(strMessage:String){
         
-        let alertController = UIAlertController(title: "Warning", message: strMessage, preferredStyle: .alert)
+        let alertController = JLAlertViewController.alertController("Warning", message: strMessage, cancelButtonText: nil, regularButtonText: "Ok")
+
         
-        let okAction = UIAlertAction(title: "Ok", style: .cancel, handler: {
-            (alert: UIAlertAction!) -> Void in
-        })
+        alertController.didDismissBlock = { alertViewController, buttonTapped in
+            
+            print("TAPPED: \(buttonTapped.rawValue)")
+            
+        }
         
-        alertController.addAction(okAction)
-        
-        self.present(alertController, animated: true, completion: nil)
+        alertController.show()
     }
     
     func addFile(isFile:Bool, strName:String){
@@ -286,15 +334,31 @@ class MasterViewController: UITableViewController {
             
             if let indexPath = self.tableView.indexPathForSelectedRow {
 
-                let controller = (segue.destination as! UINavigationController).topViewController as! DetailViewController
+                let controller = storyboard?.instantiateViewController(withIdentifier: "DetailViewController") as! DetailViewController
+                
+//                let controller = (segue.destination as! UINavigationController).topViewController as! DetailViewController
+                
                 controller.filePath = curPath + "/" + lstFile[indexPath.row]
+                controller.fileName = lstFile[indexPath.row]
+                
+                let navController = segue.destination as! UINavigationController
+                //navController.topViewController = controller
+                navController.setViewControllers([controller], animated: false)
             }
+            
+        } else if segue.identifier == "showEdit" {
+            
+            let controller = storyboard?.instantiateViewController(withIdentifier: "EditViewController") as! EditViewController
+            
+            let nSelectedIndex = self.tableView.indexPath(for: sender as! UITableViewCell)?.row
+            
+            controller.filePath = curPath + "/" + lstFile[nSelectedIndex!]
+            controller.fileName = lstFile[nSelectedIndex!]
+            
+            let navController = segue.destination as! UINavigationController
+            //navController.topViewController = controller
+            navController.setViewControllers([controller], animated: false)
         }
-    }
-    
-    @IBAction func backFromDetail(segue: UIStoryboardSegue) {
-        
-        
     }
     
     override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
@@ -312,7 +376,6 @@ class MasterViewController: UITableViewController {
                     self.navigationController?.pushViewController(controller, animated: true)
                     
                     return false
-                    
                 }
             }
         }
@@ -328,6 +391,7 @@ class MasterViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
         return lstFile.count
     }
 
@@ -337,11 +401,11 @@ class MasterViewController: UITableViewController {
 
         let imgType = cell.viewWithTag(100) as! UIImageView
         
-        imgType.image = UIImage.init(named: "File")
+        imgType.image = UIImage.init(named: "file")
         
         if lstFileType[indexPath.row] == "NSFileTypeDirectory" {
             
-            imgType.image = UIImage.init(named: "Folder")
+            imgType.image = UIImage.init(named: "folder")
         }
         
         let lblName = cell.viewWithTag(101) as! UILabel
@@ -379,11 +443,10 @@ class MasterViewController: UITableViewController {
             
             let filePath = self.curPath + "/" + self.lstFile[indexPath.row]
             
-            self.fromPath       = filePath
-            self.isMove         = true
-            self.moveFileName   = self.lstFile[indexPath.row]
-            self.navigationItem.leftBarButtonItem = self.pasteButton
+            GlobalVariables.sharedManager.moveFromPath   = filePath
+            GlobalVariables.sharedManager.moveFileName   = self.lstFile[indexPath.row]
             
+            self.tableView.tableHeaderView = self.vwPaste
             tableView.reloadRows(at: [indexPath], with: .fade)
         }
         
@@ -391,6 +454,26 @@ class MasterViewController: UITableViewController {
 
         return [delete, move]
 
+    }
+    
+    override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        
+        
+    }
+
+    @IBAction func backFromDetail(segue: UIStoryboardSegue) {
+        
+        
+    }
+    
+    @IBAction func backFromEdit(segue: UIStoryboardSegue) {
+        
+        
+    }
+    
+    @IBAction func backFromEmpty(segue: UIStoryboardSegue) {
+        
+        print("123")
     }
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
